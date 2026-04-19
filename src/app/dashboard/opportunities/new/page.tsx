@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 // ─── Types ───────────────────────────────────────────────────────
 type DocEntry = { name: string; file: string };
@@ -37,6 +39,8 @@ const textareaCls = inputCls + " resize-none";
 
 // ─── Main ─────────────────────────────────────────────────────────
 export default function NewOpportunityPage() {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
 
   // § 1 — Identity
   const [identity, setIdentity] = useState({
@@ -96,6 +100,26 @@ export default function NewOpportunityPage() {
 
   // § 10 — Risk level
   const [riskLevel, setRiskLevel] = useState("متوسط");
+
+  async function handlePublish(statusVal: string) {
+    setSaving(true);
+    await supabase.from("opportunities").insert({
+      title: identity.title,
+      location: `${identity.city}، ${identity.district}`.trim().replace(/،\s*$/, ""),
+      type: identity.type,
+      status: statusVal === "نشر" ? "funding" : "completed",
+      return_percent: parseFloat(indicators.annualReturn) || 0,
+      duration_years: parseInt(indicators.duration) || 0,
+      total_value: parseFloat(indicators.totalValue) || 0,
+      monthly_income: parseFloat(invest.monthlyIncome) || 0,
+      share_amount: parseFloat(invest.shareAmount) || 0,
+      funded_percent: 0,
+      investors_count: 0,
+      featured: false,
+    });
+    setSaving(false);
+    router.push("/dashboard/opportunities");
+  }
 
   const types        = ["مكاتب تجارية", "تجزئة تجارية", "سكني", "مستودعات", "ضيافة", "صحة", "تعليم"];
   const schedules    = ["شهري", "ربع سنوي", "نصف سنوي", "سنوي"];
@@ -473,18 +497,13 @@ export default function NewOpportunityPage() {
             إلغاء
           </Link>
           <div className="flex gap-3">
-            <button className="border border-gray-200 text-gray-600 font-medium px-5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z" />
-                <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-              </svg>
+            <button onClick={() => handlePublish("مسودة")} disabled={saving}
+              className="border border-gray-200 text-gray-600 font-medium px-5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm flex items-center gap-1.5 disabled:opacity-50">
               حفظ كمسودة
             </button>
-            <button className="bg-[#2d7b33] text-white font-bold px-6 py-2.5 rounded-xl hover:bg-[#1f5a24] transition-colors text-sm flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              نشر الفرصة
+            <button onClick={() => handlePublish("نشر")} disabled={saving}
+              className="bg-[#2d7b33] text-white font-bold px-6 py-2.5 rounded-xl hover:bg-[#1f5a24] transition-colors text-sm flex items-center gap-1.5 disabled:opacity-50">
+              {saving ? "جاري الحفظ..." : "نشر الفرصة"}
             </button>
           </div>
         </div>
