@@ -148,13 +148,15 @@ export default function OpportunitiesPage() {
                   <td className="px-4 py-4 text-sm text-gray-500">{opp.investors_count}</td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
+                      <Link href={`/dashboard/opportunities/edit?id=${opp.id}`} className="text-xs text-blue-500 hover:underline font-medium">تعديل</Link>
+                      <span className="text-gray-200">|</span>
                       {opp.status === "funding" && (
                         <button onClick={() => updateStatus(opp.id, "active")} className="text-xs text-purple-600 hover:underline font-medium">تفعيل</button>
                       )}
                       {opp.status === "active" && (
                         <button onClick={() => updateStatus(opp.id, "completed")} className="text-xs text-gray-500 hover:underline font-medium">إتمام</button>
                       )}
-                      <span className="text-gray-200">|</span>
+                      {opp.status === "funding" || opp.status === "active" ? <span className="text-gray-200">|</span> : null}
                       <button onClick={() => deleteOpportunity(opp.id)} className="text-xs text-red-400 hover:underline font-medium">حذف</button>
                     </div>
                   </td>
