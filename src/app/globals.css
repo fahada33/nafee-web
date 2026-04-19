@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+
+  /* Nafee Brand Colors */
+  --nafee-green: #2d7b33;
+  --nafee-green-dark: #1f5a24;
+  --nafee-green-light: #e8f5e9;
+  --nafee-gold: #c9a84c;
+  --nafee-gray: #f5f5f5;
+  --nafee-text: #1a1a1a;
+  --nafee-text-secondary: #6b7280;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-nafee-green: var(--nafee-green);
+  --color-nafee-green-dark: var(--nafee-green-dark);
+  --color-nafee-green-light: var(--nafee-green-light);
+  --color-nafee-gold: var(--nafee-gold);
+  --font-sans: var(--font-tajawal);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-tajawal), 'Tajawal', Arial, sans-serif;
+}
