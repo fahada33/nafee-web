@@ -102,7 +102,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {item.badge && (
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${item.badgeGreen ? "bg-[#e8f5e9] text-[#2d7b33]" : "bg-gray-100 text-gray-500"}`}>
+                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${'badgeGreen' in item && item.badgeGreen ? "bg-[#e8f5e9] text-[#2d7b33]" : "bg-gray-100 text-gray-500"}`}>
                           {item.badge}
                         </span>
                       )}
