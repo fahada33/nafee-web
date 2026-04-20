@@ -139,7 +139,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-400">الأربعاء، 16 أبريل 2025</span>
+            <span className="text-sm text-gray-400">{new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
             <div className="w-px h-5 bg-gray-200" />
             <button className="relative w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">

@@ -40,7 +40,8 @@ const textareaCls = inputCls + " resize-none";
 // ─── Main ─────────────────────────────────────────────────────────
 export default function NewOpportunityPage() {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   // § 1 — Identity
   const [identity, setIdentity] = useState({
@@ -103,20 +104,37 @@ export default function NewOpportunityPage() {
 
   async function handlePublish(statusVal: string) {
     setSaving(true);
+
+    // Upload images to Supabase Storage
+    let imageUrl = "";
+    const uploadedUrls: string[] = [];
+    for (const file of imageFiles) {
+      const ext  = file.name.split(".").pop();
+      const path = `opportunities/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("opportunities").upload(path, file, { upsert: true });
+      if (!error) {
+        const { data: pub } = supabase.storage.from("opportunities").getPublicUrl(path);
+        uploadedUrls.push(pub.publicUrl);
+      }
+    }
+    if (uploadedUrls.length > 0) imageUrl = uploadedUrls[0];
+
     await supabase.from("opportunities").insert({
-      title: identity.title,
-      location: `${identity.city}، ${identity.district}`.trim().replace(/،\s*$/, ""),
-      type: identity.type,
-      status: statusVal === "نشر" ? "funding" : "completed",
+      title:          identity.title,
+      location:       `${identity.city}، ${identity.district}`.trim().replace(/،\s*$/, ""),
+      type:           identity.type,
+      status:         statusVal === "نشر" ? "funding" : "draft",
+      description:    identity.description,
       return_percent: parseFloat(indicators.annualReturn) || 0,
       duration_years: parseInt(indicators.duration) || 0,
-      total_value: parseFloat(indicators.totalValue) || 0,
+      total_value:    parseFloat(indicators.totalValue) || 0,
       monthly_income: parseFloat(invest.monthlyIncome) || 0,
-      share_amount: parseFloat(invest.shareAmount) || 0,
-      min_shares: parseInt(invest.minShares) || 1,
+      share_amount:   parseFloat(invest.shareAmount) || 0,
+      min_shares:     parseInt(invest.minShares) || 1,
       funded_percent: 0,
       investors_count: 0,
-      featured: false,
+      featured:       false,
+      image_url:      imageUrl,
     });
     setSaving(false);
     router.push("/dashboard/opportunities");
@@ -490,8 +508,12 @@ export default function NewOpportunityPage() {
             <p className="text-xs text-gray-300 mt-1.5">PNG, JPG — حتى 10MB للصورة · أقصاه 10 صور</p>
             <label className="mt-4 inline-block bg-[#e8f5e9] text-[#2d7b33] text-xs font-bold px-4 py-2 rounded-xl cursor-pointer hover:bg-[#d4edda] transition-colors">
               اختر الصور
-              <input type="file" accept="image/*" multiple className="hidden" />
+              <input type="file" accept="image/*" multiple className="hidden"
+                onChange={(e) => setImageFiles(Array.from(e.target.files ?? []))} />
             </label>
+            {imageFiles.length > 0 && (
+              <p className="mt-2 text-xs text-[#2d7b33] font-medium">{imageFiles.length} صورة محددة</p>
+            )}
           </div>
         </SectionCard>
 
