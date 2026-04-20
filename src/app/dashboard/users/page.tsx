@@ -7,8 +7,19 @@ type User = {
   id: string;
   national_id: string;
   phone: string;
+  full_name: string | null;
+  date_of_birth: string | null;
+  nationality: string | null;
+  id_expiry_date: string | null;
   kyc_status: string;
+  kyc_reviewed_by: string | null;
+  kyc_reviewed_at: string | null;
   status: string;
+  suspension_reason: string | null;
+  last_login_at: string | null;
+  risk_profile: string | null;
+  accredited_investor: boolean;
+  pep_status: boolean;
   created_at: string;
 };
 
@@ -22,6 +33,12 @@ const statusMap: Record<string, string> = {
   active: "نشط",
   pending: "معلق",
   suspended: "موقوف",
+};
+
+const riskMap: Record<string, string> = {
+  conservative: "محافظ",
+  moderate: "متوسط",
+  aggressive: "مغامر",
 };
 
 const kycColors: Record<string, string> = {
@@ -38,12 +55,44 @@ const statusColors: Record<string, string> = {
 
 const kycFilters = ["الكل", "مكتمل", "قيد المراجعة", "مرفوض"];
 
-function formatDate(iso: string) {
+function formatDate(iso: string | null) {
+  if (!iso) return "—";
   return new Date(iso).toLocaleDateString("ar-SA", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    year: "numeric", month: "long", day: "numeric",
   });
+}
+
+function formatDateShort(iso: string | null) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("ar-SA", {
+    year: "numeric", month: "numeric", day: "numeric",
+  });
+}
+
+function timeAgo(iso: string | null) {
+  if (!iso) return "لم يسجل دخولاً بعد";
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "الآن";
+  if (mins < 60) return `منذ ${mins} دقيقة`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `منذ ${hours} ساعة`;
+  const days = Math.floor(hours / 24);
+  return `منذ ${days} يوم`;
+}
+
+function getAge(dob: string | null) {
+  if (!dob) return null;
+  const diff = Date.now() - new Date(dob).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+}
+
+function displayName(user: User) {
+  return user.full_name || user.national_id;
+}
+
+function displayInitial(user: User) {
+  return (user.full_name || user.national_id)[0];
 }
 
 export default function UsersPage() {
@@ -52,17 +101,15 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [kycFilter, setKycFilter] = useState("الكل");
   const [selected, setSelected] = useState<string | null>(null);
+  const [suspendReason, setSuspendReason] = useState("");
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
 
   useEffect(() => {
     fetchUsers();
-
     const channel = supabase
       .channel("users-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, () => {
-        fetchUsers();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, fetchUsers)
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, []);
 
@@ -75,16 +122,43 @@ export default function UsersPage() {
     setLoading(false);
   }
 
-  async function updateKyc(id: string, kyc_status: string) {
-    await supabase.from("users").update({ kyc_status }).eq("id", id);
+  async function approveKyc(id: string) {
+    await supabase.from("users").update({
+      kyc_status: "complete",
+      status: "active",
+      kyc_reviewed_by: "majed@nafee.net",
+      kyc_reviewed_at: new Date().toISOString(),
+    }).eq("id", id);
   }
 
-  async function updateStatus(id: string, status: string) {
-    await supabase.from("users").update({ status }).eq("id", id);
+  async function rejectKyc(id: string) {
+    await supabase.from("users").update({
+      kyc_status: "rejected",
+      kyc_reviewed_by: "majed@nafee.net",
+      kyc_reviewed_at: new Date().toISOString(),
+    }).eq("id", id);
+  }
+
+  async function suspendUser(id: string) {
+    await supabase.from("users").update({
+      status: "suspended",
+      suspension_reason: suspendReason || null,
+    }).eq("id", id);
+    setShowSuspendModal(false);
+    setSuspendReason("");
+  }
+
+  async function activateUser(id: string) {
+    await supabase.from("users").update({
+      status: "active",
+      suspension_reason: null,
+    }).eq("id", id);
   }
 
   const filtered = users.filter((u) => {
-    const matchSearch = u.phone.includes(search) || u.national_id.includes(search);
+    const name = u.full_name?.toLowerCase() ?? "";
+    const q = search.toLowerCase();
+    const matchSearch = u.phone.includes(search) || u.national_id.includes(search) || name.includes(q);
     const matchKyc = kycFilter === "الكل" || kycMap[u.kyc_status] === kycFilter;
     return matchSearch && matchKyc;
   });
@@ -93,7 +167,7 @@ export default function UsersPage() {
 
   return (
     <div className="flex gap-5">
-      <div className="flex-1 flex flex-col gap-5">
+      <div className="flex-1 flex flex-col gap-5 min-w-0">
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
@@ -117,7 +191,7 @@ export default function UsersPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث برقم الجوال أو الهوية..."
+              placeholder="ابحث بالاسم أو الجوال أو الهوية..."
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-[#2d7b33] transition-colors"
             />
             <svg className="absolute top-3 right-3.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
@@ -142,15 +216,17 @@ export default function UsersPage() {
           {loading ? (
             <div className="text-center py-16 text-gray-400 text-sm">جاري التحميل...</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-400 text-sm">لا يوجد مستخدمون بعد</div>
+            <div className="text-center py-16 text-gray-400 text-sm">لا يوجد مستخدمون</div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-right text-xs text-gray-400 font-semibold px-6 py-4">رقم الهوية</th>
-                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">رقم الجوال</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-6 py-4">المستخدم</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">الجوال</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">الجنسية</th>
                   <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">حالة KYC</th>
                   <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">الحالة</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">آخر دخول</th>
                   <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">تاريخ الانضمام</th>
                   <th className="px-4 py-4" />
                 </tr>
@@ -165,12 +241,16 @@ export default function UsersPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-[#e8f5e9] flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm font-bold text-[#2d7b33]">{user.national_id[0]}</span>
+                          <span className="text-sm font-bold text-[#2d7b33]">{displayInitial(user)}</span>
                         </div>
-                        <span className="text-sm font-semibold text-[#1a1a1a]">{user.national_id}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1a1a1a]">{displayName(user)}</p>
+                          <p className="text-xs text-gray-400">{user.national_id}</p>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-500">{user.phone}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500">{user.nationality ?? "—"}</td>
                     <td className="px-4 py-4">
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${kycColors[user.kyc_status]}`}>
                         {kycMap[user.kyc_status]}
@@ -181,6 +261,7 @@ export default function UsersPage() {
                         {statusMap[user.status]}
                       </span>
                     </td>
+                    <td className="px-4 py-4 text-xs text-gray-400">{timeAgo(user.last_login_at)}</td>
                     <td className="px-4 py-4 text-sm text-gray-400">{formatDate(user.created_at)}</td>
                     <td className="px-4 py-4">
                       <button className="text-[#2d7b33] text-xs font-medium hover:underline">عرض</button>
@@ -193,47 +274,90 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* User Detail Panel */}
+      {/* Detail Panel */}
       {selectedUser && (
-        <div className="w-72 flex-shrink-0">
-          <div className="bg-white rounded-2xl shadow-sm p-5 sticky top-24">
-            <div className="flex items-center justify-between mb-4">
+        <div className="w-80 flex-shrink-0">
+          <div className="bg-white rounded-2xl shadow-sm p-5 sticky top-24 flex flex-col gap-4">
+
+            {/* Header */}
+            <div className="flex items-center justify-between">
               <h3 className="font-bold text-[#1a1a1a] text-sm">بيانات المستخدم</h3>
               <button onClick={() => setSelected(null)} className="text-gray-300 hover:text-gray-500 text-lg leading-none">✕</button>
             </div>
-            <div className="flex flex-col items-center mb-5">
+
+            {/* Avatar + name */}
+            <div className="flex flex-col items-center">
               <div className="w-16 h-16 rounded-2xl bg-[#e8f5e9] flex items-center justify-center mb-3">
-                <span className="text-2xl font-extrabold text-[#2d7b33]">{selectedUser.national_id[0]}</span>
+                <span className="text-2xl font-extrabold text-[#2d7b33]">{displayInitial(selectedUser)}</span>
               </div>
-              <p className="font-bold text-[#1a1a1a]">{selectedUser.national_id}</p>
+              <p className="font-bold text-[#1a1a1a] text-base">{displayName(selectedUser)}</p>
               <p className="text-xs text-gray-400 mt-0.5">{selectedUser.phone}</p>
-              <span className={`text-xs font-medium px-3 py-1 rounded-full mt-2 ${kycColors[selectedUser.kyc_status]}`}>
-                {kycMap[selectedUser.kyc_status]}
-              </span>
-            </div>
-            <div className="flex flex-col gap-3 py-4 border-y border-gray-50">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">تاريخ الانضمام</span>
-                <span className="font-bold text-[#1a1a1a]">{formatDate(selectedUser.created_at)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">حالة الحساب</span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[selectedUser.status]}`}>
+              <div className="flex gap-2 mt-2 flex-wrap justify-center">
+                <span className={`text-xs font-medium px-3 py-1 rounded-full ${kycColors[selectedUser.kyc_status]}`}>
+                  KYC: {kycMap[selectedUser.kyc_status]}
+                </span>
+                <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusColors[selectedUser.status]}`}>
                   {statusMap[selectedUser.status]}
                 </span>
               </div>
             </div>
-            <div className="flex flex-col gap-2 mt-4">
+
+            {/* Identity Info */}
+            <div className="bg-gray-50 rounded-xl p-3 flex flex-col gap-2">
+              <p className="text-xs font-bold text-gray-400 mb-1">بيانات الهوية</p>
+              <Row label="رقم الهوية" value={selectedUser.national_id} />
+              <Row label="الجنسية" value={selectedUser.nationality ?? "—"} />
+              <Row label="تاريخ الميلاد" value={
+                selectedUser.date_of_birth
+                  ? `${formatDateShort(selectedUser.date_of_birth)} (${getAge(selectedUser.date_of_birth)} سنة)`
+                  : "—"
+              } />
+              <Row label="انتهاء الهوية" value={formatDateShort(selectedUser.id_expiry_date)} warn={
+                selectedUser.id_expiry_date ? new Date(selectedUser.id_expiry_date) < new Date() : false
+              } />
+            </div>
+
+            {/* Activity */}
+            <div className="bg-gray-50 rounded-xl p-3 flex flex-col gap-2">
+              <p className="text-xs font-bold text-gray-400 mb-1">النشاط</p>
+              <Row label="تاريخ الانضمام" value={formatDate(selectedUser.created_at)} />
+              <Row label="آخر دخول" value={timeAgo(selectedUser.last_login_at)} />
+            </div>
+
+            {/* Compliance */}
+            <div className="bg-gray-50 rounded-xl p-3 flex flex-col gap-2">
+              <p className="text-xs font-bold text-gray-400 mb-1">الامتثال</p>
+              <Row label="ملف المخاطر" value={riskMap[selectedUser.risk_profile ?? "moderate"]} />
+              <Row label="مستثمر معتمد" value={selectedUser.accredited_investor ? "نعم" : "لا"} />
+              <Row label="PEP" value={selectedUser.pep_status ? "نعم ⚠️" : "لا"} />
+              {selectedUser.kyc_reviewed_by && (
+                <Row label="راجع KYC" value={selectedUser.kyc_reviewed_by} />
+              )}
+              {selectedUser.kyc_reviewed_at && (
+                <Row label="تاريخ المراجعة" value={formatDateShort(selectedUser.kyc_reviewed_at)} />
+              )}
+            </div>
+
+            {/* Suspension reason */}
+            {selectedUser.status === "suspended" && selectedUser.suspension_reason && (
+              <div className="bg-red-50 rounded-xl p-3">
+                <p className="text-xs font-bold text-red-400 mb-1">سبب التعليق</p>
+                <p className="text-xs text-red-600">{selectedUser.suspension_reason}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
               {selectedUser.kyc_status === "pending" && (
                 <>
                   <button
-                    onClick={() => updateKyc(selectedUser.id, "complete")}
+                    onClick={() => approveKyc(selectedUser.id)}
                     className="w-full bg-[#2d7b33] text-white text-sm font-bold py-2.5 rounded-xl hover:bg-[#1f5a24] transition-colors"
                   >
                     ✓ قبول KYC
                   </button>
                   <button
-                    onClick={() => updateKyc(selectedUser.id, "rejected")}
+                    onClick={() => rejectKyc(selectedUser.id)}
                     className="w-full bg-red-50 text-red-500 text-sm font-medium py-2.5 rounded-xl hover:bg-red-100 transition-colors"
                   >
                     ✕ رفض KYC
@@ -242,7 +366,7 @@ export default function UsersPage() {
               )}
               {selectedUser.status === "active" && (
                 <button
-                  onClick={() => updateStatus(selectedUser.id, "suspended")}
+                  onClick={() => setShowSuspendModal(true)}
                   className="w-full border border-orange-200 text-orange-500 text-sm font-medium py-2.5 rounded-xl hover:bg-orange-50 transition-colors"
                 >
                   تعليق الحساب
@@ -250,7 +374,7 @@ export default function UsersPage() {
               )}
               {selectedUser.status === "suspended" && (
                 <button
-                  onClick={() => updateStatus(selectedUser.id, "active")}
+                  onClick={() => activateUser(selectedUser.id)}
                   className="w-full bg-[#2d7b33] text-white text-sm font-bold py-2.5 rounded-xl hover:bg-[#1f5a24] transition-colors"
                 >
                   تفعيل الحساب
@@ -260,6 +384,46 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+
+      {/* Suspend Modal */}
+      {showSuspendModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setShowSuspendModal(false)}>
+          <div className="bg-white rounded-2xl p-6 w-96 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-[#1a1a1a] mb-1">تعليق الحساب</h3>
+            <p className="text-sm text-gray-400 mb-4">أدخل سبب التعليق (اختياري)</p>
+            <textarea
+              value={suspendReason}
+              onChange={(e) => setSuspendReason(e.target.value)}
+              placeholder="مثال: مخالفة شروط الاستخدام..."
+              rows={3}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-orange-400 transition-colors mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSuspendModal(false)}
+                className="flex-1 border border-gray-200 text-gray-500 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => suspendUser(selectedUser.id)}
+                className="flex-1 bg-orange-500 text-white text-sm font-bold py-2.5 rounded-xl hover:bg-orange-600 transition-colors"
+              >
+                تعليق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Row({ label, value, warn }: { label: string; value: string; warn?: boolean }) {
+  return (
+    <div className="flex justify-between items-center text-xs">
+      <span className="text-gray-400">{label}</span>
+      <span className={`font-semibold ${warn ? "text-red-500" : "text-[#1a1a1a]"}`}>{value}</span>
     </div>
   );
 }
