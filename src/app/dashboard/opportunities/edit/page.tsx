@@ -35,8 +35,9 @@ function EditForm() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [imageFile, setImageFile]   = useState<File | null>(null);
   const [form, setForm] = useState({
     title: "", location: "", type: "", status: "funding",
     return_percent: "", duration_years: "", total_value: "",
@@ -77,20 +78,30 @@ function EditForm() {
 
   async function handleSave() {
     setSaving(true);
+    let imageUrl = form.image_url;
+    if (imageFile) {
+      const ext  = imageFile.name.split(".").pop();
+      const path = `opportunities/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("opportunities").upload(path, imageFile, { upsert: true });
+      if (!error) {
+        const { data: pub } = supabase.storage.from("opportunities").getPublicUrl(path);
+        imageUrl = pub.publicUrl;
+      }
+    }
     await supabase.from("opportunities").update({
-      title: form.title,
-      location: form.location,
-      type: form.type,
-      status: form.status,
+      title:          form.title,
+      location:       form.location,
+      type:           form.type,
+      status:         form.status,
       return_percent: parseFloat(form.return_percent) || 0,
       duration_years: parseInt(form.duration_years) || 0,
-      total_value: parseFloat(form.total_value) || 0,
+      total_value:    parseFloat(form.total_value) || 0,
       monthly_income: parseFloat(form.monthly_income) || 0,
-      share_amount: parseFloat(form.share_amount) || 0,
+      share_amount:   parseFloat(form.share_amount) || 0,
       funded_percent: parseFloat(form.funded_percent) || 0,
       investors_count: parseInt(form.investors_count) || 0,
-      image_url: form.image_url,
-      featured: form.featured,
+      image_url:      imageUrl,
+      featured:       form.featured,
     }).eq("id", id!);
     setSaving(false);
     router.push("/dashboard/opportunities");
@@ -152,11 +163,20 @@ function EditForm() {
         </SectionCard>
 
         <SectionCard title="الصورة">
-          <Field label="رابط الصورة">
-            <input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." className={inputCls} />
+          <Field label="رفع صورة جديدة">
+            <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#2d7b33] font-medium hover:bg-[#e8f5e9] transition-colors w-fit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+              </svg>
+              {imageFile ? imageFile.name : "اختر صورة"}
+              <input type="file" accept="image/*" className="hidden"
+                onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
+            </label>
           </Field>
-          {form.image_url && (
-            <img src={form.image_url} alt="" className="mt-3 w-full h-40 object-cover rounded-xl" />
+          {(imageFile ? URL.createObjectURL(imageFile) : form.image_url) && (
+            <img src={imageFile ? URL.createObjectURL(imageFile) : form.image_url}
+              alt="" className="mt-3 w-full h-40 object-cover rounded-xl" />
           )}
         </SectionCard>
 
