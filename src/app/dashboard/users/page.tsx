@@ -23,14 +23,21 @@ type User = {
   created_at: string;
 };
 
+type OpportunityRef = { title: string; location: string; return_percent: number };
+
 type Investment = {
   id: string;
   amount: number;
   shares_count: number;
   status: string;
   created_at: string;
-  opportunities: { title: string; location: string; return_percent: number } | null;
+  opportunities: OpportunityRef | OpportunityRef[] | null;
 };
+
+function getOpportunity(inv: Investment): OpportunityRef | null {
+  if (!inv.opportunities) return null;
+  return Array.isArray(inv.opportunities) ? inv.opportunities[0] ?? null : inv.opportunities;
+}
 
 type UserStats = {
   total_invested: number;
@@ -374,11 +381,11 @@ export default function UsersPage() {
                 {userStats.investments.map((inv) => (
                   <div key={inv.id} className="bg-gray-50 rounded-xl p-3 flex flex-col gap-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-[#1a1a1a] truncate flex-1">{inv.opportunities?.title ?? "—"}</p>
+                      <p className="text-xs font-semibold text-[#1a1a1a] truncate flex-1">{getOpportunity(inv)?.title ?? "—"}</p>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full mr-2 ${invStatusColors[inv.status]}`}>{invStatusMap[inv.status]}</span>
                     </div>
                     <div className="flex justify-between text-xs text-gray-400">
-                      <span>{inv.opportunities?.location}</span>
+                      <span>{getOpportunity(inv)?.location}</span>
                       <span className="font-semibold text-[#1a1a1a]">{inv.amount.toLocaleString()} ريال</span>
                     </div>
                   </div>
