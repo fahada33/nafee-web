@@ -54,7 +54,7 @@ export default function NewOpportunityPage() {
 
   // § 3 — Investment summary
   const [invest, setInvest] = useState({
-    monthlyIncome: "", shareAmount: "", minInvestment: "", capitalRecovery: "", distributionCount: "",
+    monthlyIncome: "", shareAmount: "", minShares: "1", minInvestment: "", capitalRecovery: "", distributionCount: "",
   });
 
   // § 4 — Funding
@@ -113,6 +113,7 @@ export default function NewOpportunityPage() {
       total_value: parseFloat(indicators.totalValue) || 0,
       monthly_income: parseFloat(invest.monthlyIncome) || 0,
       share_amount: parseFloat(invest.shareAmount) || 0,
+      min_shares: parseInt(invest.minShares) || 1,
       funded_percent: 0,
       investors_count: 0,
       featured: false,
@@ -224,6 +225,11 @@ export default function NewOpportunityPage() {
                   placeholder="25000" className={inputCls + " pl-12"} />
                 <span className="absolute left-3 top-3 text-gray-400 text-xs">ريال</span>
               </div>
+            </Field>
+            <Field label="الحد الأدنى للوحدات" required>
+              <input type="number" value={invest.minShares} min="1"
+                onChange={(e) => setInvest({ ...invest, minShares: e.target.value })}
+                placeholder="1" className={inputCls} />
             </Field>
             <Field label="الحد الأدنى للاستثمار (ريال)" required>
               <div className="relative">
