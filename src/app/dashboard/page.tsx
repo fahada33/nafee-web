@@ -1,53 +1,96 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-const stats = [
-  { label: "إجمالي الملاك", value: "1,284", change: "+12%", positive: true, icon: "👥" },
-  { label: "العقارات النشطة", value: "8", change: "+2", positive: true, icon: "🏢" },
-  { label: "إجمالي قيمة الوحدات", value: "12.4M", change: "+8%", positive: true, icon: "💰", unit: "ريال" },
-  { label: "التوزيعات هذا الشهر", value: "340K", change: "على الموعد", positive: true, icon: "📤", unit: "ريال" },
-];
+type Opp = { id: string; title: string; status: string; funded_percent: number; total_value: number; investors_count: number };
+type User = { phone: string; full_name: string | null; national_id: string; kyc_status: string; created_at: string };
 
-const recentOpportunities = [
-  { id: "1", title: "برج الأعمال - الرياض", status: "تمويل مفتوح", funded: 68, target: "2,000,000", investors: 142 },
-  { id: "2", title: "مجمع الواحة - جدة", status: "تمويل مفتوح", funded: 45, target: "1,500,000", investors: 87 },
-  { id: "3", title: "فيلا بريميوم - الدمام", status: "مكتمل التمويل", funded: 100, target: "800,000", investors: 64 },
-  { id: "4", title: "مركز لوجستي - الرياض", status: "تمويل مفتوح", funded: 22, target: "3,000,000", investors: 38 },
-];
-
-const recentUsers = [
-  { name: "محمد العتيبي", email: "m.otaibi@email.com", kyc: "مكتمل", invested: "168,500", date: "اليوم" },
-  { name: "سارة القحطاني", email: "s.qahtani@email.com", kyc: "مكتمل", invested: "50,000", date: "اليوم" },
-  { name: "عبدالله الدوسري", email: "a.dosari@email.com", kyc: "قيد المراجعة", invested: "—", date: "أمس" },
-  { name: "نورة الشمري", email: "n.shamri@email.com", kyc: "مكتمل", invested: "95,000", date: "أمس" },
-  { name: "خالد الزهراني", email: "k.zahrani@email.com", kyc: "مكتمل", invested: "200,000", date: "منذ يومين" },
-];
-
-const statusColors: Record<string, string> = {
-  "مسودة":          "bg-gray-100 text-gray-500",       // DRAFT
-  "تمويل مفتوح":   "bg-[#e8f5e9] text-[#2d7b33]",    // FUNDING
-  "مكتمل التمويل": "bg-blue-50 text-blue-600",         // FUNDED
-  "نشط":            "bg-purple-50 text-purple-600",    // ACTIVE
-  "مكتمل":          "bg-gray-100 text-gray-500",       // COMPLETED
-  "ملغي":           "bg-red-50 text-red-500",          // CANCELLED
+const statusLabel: Record<string, string> = {
+  funding:   "تمويل مفتوح",
+  active:    "نشط",
+  completed: "مكتمل",
+  draft:     "مسودة",
+};
+const statusColor: Record<string, string> = {
+  funding:   "bg-[#e8f5e9] text-[#2d7b33]",
+  active:    "bg-purple-50 text-purple-600",
+  completed: "bg-gray-100 text-gray-500",
+  draft:     "bg-gray-100 text-gray-500",
+};
+const kycLabel: Record<string, string>  = { pending: "قيد المراجعة", complete: "مكتمل", rejected: "مرفوض" };
+const kycColor: Record<string, string>  = {
+  pending:  "bg-orange-50 text-orange-500",
+  complete: "bg-[#e8f5e9] text-[#2d7b33]",
+  rejected: "bg-red-50 text-red-500",
 };
 
-const kycColors: Record<string, string> = {
-  "مكتمل": "bg-[#e8f5e9] text-[#2d7b33]",
-  "قيد المراجعة": "bg-orange-50 text-orange-500",
-  "مرفوض": "bg-red-50 text-red-500",
-};
+function fmtMoney(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}K`;
+  return n.toLocaleString("ar-SA");
+}
 
-const bars = [55, 70, 45, 80, 65, 90, 75, 95, 85, 100, 88, 92];
-const months = ["مايو", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس", "يناير", "فبر", "مارس", "أبريل"];
+function relativeDate(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 0) return "اليوم";
+  if (days === 1) return "أمس";
+  return `منذ ${days} أيام`;
+}
 
 export default function DashboardPage() {
+  const [loading, setLoading]           = useState(true);
+  const [usersCount, setUsersCount]     = useState(0);
+  const [pendingKyc, setPendingKyc]     = useState(0);
+  const [pendingDeposits, setPendingDeposits] = useState(0);
+  const [totalInvested, setTotalInvested] = useState(0);
+  const [opportunities, setOpportunities] = useState<Opp[]>([]);
+  const [recentUsers, setRecentUsers]   = useState<User[]>([]);
+  const [activeOpps, setActiveOpps]     = useState(0);
+
+  useEffect(() => { fetchAll(); }, []);
+
+  async function fetchAll() {
+    const [
+      { count: uCount },
+      { count: kycCount },
+      { count: depCount },
+      { data: invData },
+      { data: oppsData },
+      { data: usersData },
+    ] = await Promise.all([
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase.from("users").select("*", { count: "exact", head: true }).eq("kyc_status", "pending"),
+      supabase.from("wallet_transactions").select("*", { count: "exact", head: true }).eq("type", "deposit").eq("status", "pending"),
+      supabase.from("investments").select("amount"),
+      supabase.from("opportunities").select("id, title, status, funded_percent, total_value, investors_count").order("created_at", { ascending: false }).limit(5),
+      supabase.from("users").select("phone, full_name, national_id, kyc_status, created_at").order("created_at", { ascending: false }).limit(5),
+    ]);
+
+    const total = (invData ?? []).reduce((s: number, r: { amount: number }) => s + (r.amount ?? 0), 0);
+    const opps  = (oppsData ?? []) as Opp[];
+
+    setUsersCount(uCount ?? 0);
+    setPendingKyc(kycCount ?? 0);
+    setPendingDeposits(depCount ?? 0);
+    setTotalInvested(total);
+    setOpportunities(opps);
+    setActiveOpps(opps.filter(o => o.status !== "completed").length);
+    setRecentUsers((usersData ?? []) as User[]);
+    setLoading(false);
+  }
+
+  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400 text-sm">جاري التحميل...</div>;
+
   return (
     <div className="flex flex-col gap-6">
 
       {/* Welcome */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-extrabold text-[#1a1a1a]">مرحباً، مدير النظام 👋</h2>
+          <h2 className="text-2xl font-extrabold text-[#1a1a1a]">مرحباً، ماجد 👋</h2>
           <p className="text-gray-400 text-sm mt-1">إليك ملخص المنصة اليوم</p>
         </div>
         <Link
@@ -60,163 +103,140 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-4">
-        {stats.map((stat) => (
+        {[
+          { label: "إجمالي الملاك",          value: usersCount.toLocaleString("ar-SA"), icon: "👥",  color: "text-[#1a1a1a]" },
+          { label: "الفرص النشطة",            value: String(activeOpps),                 icon: "🏢",  color: "text-[#1a1a1a]" },
+          { label: "إجمالي الاستثمارات",      value: fmtMoney(totalInvested),            icon: "💰",  color: "text-[#2d7b33]", unit: "ريال" },
+          { label: "طلبات شحن معلقة",         value: String(pendingDeposits),            icon: "📥",  color: "text-orange-500" },
+        ].map((stat) => (
           <div key={stat.label} className="bg-white rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-2xl">{stat.icon}</span>
-              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${stat.positive ? "bg-[#e8f5e9] text-[#2d7b33]" : "bg-red-50 text-red-500"}`}>
-                {stat.change}
-              </span>
-            </div>
-            <p className="text-2xl font-extrabold text-[#1a1a1a]">
-              {stat.value} <span className="text-sm font-medium text-gray-400">{stat.unit}</span>
+            <div className="mb-3 text-2xl">{stat.icon}</div>
+            <p className={`text-2xl font-extrabold ${stat.color}`}>
+              {stat.value} <span className="text-sm font-medium text-gray-400">{stat.unit ?? ""}</span>
             </p>
             <p className="text-sm text-gray-400 mt-1">{stat.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Chart + Activity */}
+      {/* Opportunities Table */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+          <h3 className="font-bold text-[#1a1a1a]">الفرص الاستثمارية</h3>
+          <Link href="/dashboard/opportunities" className="text-[#2d7b33] text-sm font-medium hover:underline">عرض الكل</Link>
+        </div>
+        {opportunities.length === 0 ? (
+          <div className="text-center py-12 text-gray-400 text-sm">لا توجد فرص بعد</div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="text-right text-xs text-gray-400 font-semibold px-6 py-3">الفرصة</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الحالة</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">التمويل</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">القيمة الكلية</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الملاك</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {opportunities.map((opp, i) => (
+                <tr key={opp.id} className={`hover:bg-gray-50 transition-colors ${i < opportunities.length - 1 ? "border-b border-gray-50" : ""}`}>
+                  <td className="px-6 py-4 text-sm font-semibold text-[#1a1a1a]">{opp.title}</td>
+                  <td className="px-4 py-4">
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColor[opp.status] ?? "bg-gray-100 text-gray-500"}`}>
+                      {statusLabel[opp.status] ?? opp.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 bg-gray-100 rounded-full h-1.5">
+                        <div className="bg-[#2d7b33] h-1.5 rounded-full" style={{ width: `${opp.funded_percent}%` }} />
+                      </div>
+                      <span className="text-xs text-gray-500">{opp.funded_percent}%</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-500">{fmtMoney(opp.total_value)} ريال</td>
+                  <td className="px-4 py-4 text-sm text-gray-500">{opp.investors_count} مالك</td>
+                  <td className="px-4 py-4">
+                    <Link href="/dashboard/opportunities" className="text-[#2d7b33] text-xs font-medium hover:underline">إدارة</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Recent Users + Quick Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Chart */}
-        <div className="col-span-2 bg-white rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-[#1a1a1a]">نمو المنصة</h3>
-            <span className="text-xs text-[#2d7b33] bg-[#e8f5e9] px-3 py-1 rounded-full font-medium">↑ 18% هذا العام</span>
+        {/* Users Table */}
+        <div className="col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+            <h3 className="font-bold text-[#1a1a1a]">آخر المستخدمين</h3>
+            <Link href="/dashboard/users" className="text-[#2d7b33] text-sm font-medium hover:underline">عرض الكل</Link>
           </div>
-          <div className="flex items-end gap-3 h-40">
-            {bars.map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className={`w-full rounded-t-lg transition-all ${i === bars.length - 1 ? "bg-[#2d7b33]" : "bg-[#2d7b33]/20"}`}
-                  style={{ height: `${h * 1.4}px` }}
-                />
-                <span className="text-xs text-gray-400 rotate-45 origin-top-left" style={{ fontSize: "9px" }}>{months[i]}</span>
-              </div>
-            ))}
-          </div>
+          {recentUsers.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 text-sm">لا يوجد مستخدمون</div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="text-right text-xs text-gray-400 font-semibold px-6 py-3">المستخدم</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">حالة KYC</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">تاريخ الانضمام</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {recentUsers.map((user, i) => {
+                  const display = user.full_name || user.national_id || user.phone;
+                  return (
+                    <tr key={user.phone} className={`hover:bg-gray-50 transition-colors ${i < recentUsers.length - 1 ? "border-b border-gray-50" : ""}`}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-[#e8f5e9] flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-bold text-[#2d7b33]">{display[0]}</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-[#1a1a1a]">{display}</p>
+                            <p className="text-xs text-gray-400">{user.phone}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${kycColor[user.kyc_status] ?? "bg-gray-100 text-gray-500"}`}>
+                          {kycLabel[user.kyc_status] ?? user.kyc_status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-400">{relativeDate(user.created_at)}</td>
+                      <td className="px-4 py-4">
+                        <Link href="/dashboard/users" className="text-[#2d7b33] text-xs font-medium hover:underline">عرض</Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Quick Stats */}
         <div className="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
           <h3 className="font-bold text-[#1a1a1a]">إحصائيات سريعة</h3>
           {[
-            { label: "طلبات KYC معلقة", value: "23", color: "text-orange-500" },
-            { label: "فرص تحتاج مراجعة", value: "2", color: "text-blue-500" },
-            { label: "توزيعات مجدولة", value: "5", color: "text-[#2d7b33]" },
-            { label: "طلبات سحب", value: "8", color: "text-purple-500" },
+            { label: "طلبات KYC معلقة",   value: pendingKyc,      color: "text-orange-500", href: "/dashboard/users" },
+            { label: "طلبات شحن معلقة",   value: pendingDeposits, color: "text-blue-500",   href: "/dashboard/wallet" },
+            { label: "الفرص النشطة",       value: activeOpps,      color: "text-[#2d7b33]",  href: "/dashboard/opportunities" },
+            { label: "إجمالي الملاك",      value: usersCount,      color: "text-purple-500", href: "/dashboard/users" },
           ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+            <Link key={item.label} href={item.href}
+              className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 hover:opacity-70 transition-opacity">
               <span className="text-sm text-gray-500">{item.label}</span>
               <span className={`font-extrabold text-lg ${item.color}`}>{item.value}</span>
-            </div>
+            </Link>
           ))}
-          <div className="mt-2 bg-[#e8f5e9] rounded-xl p-3 text-center">
-            <p className="text-[#2d7b33] text-xs font-medium">التوزيع القادم</p>
-            <p className="text-[#2d7b33] font-extrabold text-lg mt-0.5">15 مايو 2025</p>
-          </div>
         </div>
-      </div>
-
-      {/* Opportunities Table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
-          <h3 className="font-bold text-[#1a1a1a]">الفرص الاستثمارية</h3>
-          <Link href="/dashboard/opportunities" className="text-[#2d7b33] text-sm font-medium hover:underline">
-            عرض الكل
-          </Link>
-        </div>
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="text-right text-xs text-gray-400 font-semibold px-6 py-3">الفرصة</th>
-              <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الحالة</th>
-              <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">التمويل</th>
-              <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الهدف</th>
-              <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الملاك</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {recentOpportunities.map((opp, i) => (
-              <tr key={opp.id} className={`hover:bg-gray-50 transition-colors ${i < recentOpportunities.length - 1 ? "border-b border-gray-50" : ""}`}>
-                <td className="px-6 py-4">
-                  <p className="text-sm font-semibold text-[#1a1a1a]">{opp.title}</p>
-                </td>
-                <td className="px-4 py-4">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[opp.status] ?? "bg-gray-100 text-gray-500"}`}>
-                    {opp.status}
-                  </span>
-                </td>
-                <td className="px-4 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-100 rounded-full h-1.5">
-                      <div className="bg-[#2d7b33] h-1.5 rounded-full" style={{ width: `${opp.funded}%` }} />
-                    </div>
-                    <span className="text-xs text-gray-500">{opp.funded}%</span>
-                  </div>
-                </td>
-                <td className="px-4 py-4 text-sm text-gray-500">{opp.target} ريال</td>
-                <td className="px-4 py-4 text-sm text-gray-500">{opp.investors} مالك</td>
-                <td className="px-4 py-4">
-                  <Link href={`/dashboard/opportunities`} className="text-[#2d7b33] text-xs font-medium hover:underline">
-                    إدارة
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Recent Users */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
-          <h3 className="font-bold text-[#1a1a1a]">آخر المستخدمين</h3>
-          <Link href="/dashboard/users" className="text-[#2d7b33] text-sm font-medium hover:underline">
-            عرض الكل
-          </Link>
-        </div>
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="text-right text-xs text-gray-400 font-semibold px-6 py-3">المستخدم</th>
-              <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">حالة KYC</th>
-              <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">قيمة الوحدات</th>
-              <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">تاريخ الانضمام</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {recentUsers.map((user, i) => (
-              <tr key={user.email} className={`hover:bg-gray-50 transition-colors ${i < recentUsers.length - 1 ? "border-b border-gray-50" : ""}`}>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#e8f5e9] flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-[#2d7b33]">{user.name[0]}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[#1a1a1a]">{user.name}</p>
-                      <p className="text-xs text-gray-400">{user.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-4">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${kycColors[user.kyc] ?? "bg-gray-100 text-gray-500"}`}>
-                    {user.kyc}
-                  </span>
-                </td>
-                <td className="px-4 py-4 text-sm text-gray-500">{user.invested} {user.invested !== "—" ? "ريال" : ""}</td>
-                <td className="px-4 py-4 text-sm text-gray-400">{user.date}</td>
-                <td className="px-4 py-4">
-                  <Link href="/dashboard/users" className="text-[#2d7b33] text-xs font-medium hover:underline">
-                    عرض
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
 
     </div>
