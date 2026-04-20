@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   {
@@ -51,8 +51,19 @@ const navItems = [
   },
 ];
 
+function handleLogout() {
+  document.cookie = "nafee_admin_auth=; path=/; max-age=0";
+  window.location.href = "/dashboard/login";
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  void router;
+
+  if (pathname === "/dashboard/login") {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex font-[family-name:var(--font-tajawal)]" dir="rtl">
@@ -93,9 +104,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-sm font-bold text-[#2d7b33]">م</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#1a1a1a] truncate">مدير النظام</p>
-              <p className="text-xs text-gray-400 truncate">admin@nafee.sa</p>
+              <p className="text-sm font-semibold text-[#1a1a1a] truncate">ماجد</p>
+              <p className="text-xs text-gray-400 truncate">majed@nafee.net</p>
             </div>
+            <button
+              onClick={handleLogout}
+              title="تسجيل الخروج"
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </button>
           </div>
         </div>
       </aside>
