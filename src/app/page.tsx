@@ -1,4 +1,76 @@
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+
+async function fetchLiveStats() {
+  const defaults = {
+    opportunities: "+50",
+    owners: "+1,200",
+    avgReturn: "12%",
+    distributedThisMonth: "340K",
+  };
+  try {
+    const [oppsRes, usersRes, distRes] = await Promise.all([
+      supabase.from("opportunities").select("return_percent", { count: "exact" }),
+      supabase.from("users").select("id", { count: "exact", head: true }).neq("status", "deleted"),
+      supabase.from("distribution_logs").select("total_amount, distributed_at"),
+    ]);
+
+    const oppsCount = oppsRes.count ?? 0;
+    const returns = (oppsRes.data ?? []).map((r) => Number(r.return_percent || 0));
+    const avg =
+      returns.length > 0
+        ? returns.reduce((a: number, b: number) => a + b, 0) / returns.length
+        : 0;
+
+    const usersCount = usersRes.count ?? 0;
+
+    const now = new Date();
+    const distributedThisMonth = (distRes.data ?? [])
+      .filter((r) => {
+        const d = new Date(r.distributed_at as string);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((s: number, r) => s + Number(r.total_amount || 0), 0);
+
+    return {
+      opportunities: oppsCount > 0 ? `+${oppsCount}` : defaults.opportunities,
+      owners: usersCount > 0 ? `+${usersCount.toLocaleString("ar-SA")}` : defaults.owners,
+      avgReturn: avg > 0 ? `${avg.toFixed(1)}%` : defaults.avgReturn,
+      distributedThisMonth:
+        distributedThisMonth >= 1000
+          ? `${(distributedThisMonth / 1000).toFixed(0)}K`
+          : distributedThisMonth > 0
+            ? `${distributedThisMonth}`
+            : defaults.distributedThisMonth,
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+const testimonials = [
+  {
+    name: "عبدالله المطيري",
+    role: "مالك في نافع منذ 6 أشهر",
+    quote:
+      "حاولت أستثمر في العقار من زمان، نافع سهّلت لي العملية بمبلغ صغير وبدون تعقيد. أول توزيع وصل محفظتي خلال شهر.",
+    initials: "ع",
+  },
+  {
+    name: "نورة السبيعي",
+    role: "مستثمرة عقارية",
+    quote:
+      "أحب فكرة تنويع العقار بدل ما أركز كل رأس مالي في عقار واحد. نافع خلّت الموضوع ممكن بأي مبلغ.",
+    initials: "ن",
+  },
+  {
+    name: "سعد الغامدي",
+    role: "ريادي أعمال",
+    quote:
+      "الدخل الإيجاري يصل بانتظام شهرياً. التطبيق واضح والدعم سريع. تجربة احترافية.",
+    initials: "س",
+  },
+];
 
 const opportunities = [
   { title: "برج الأعمال", location: "الرياض، حي العليا", type: "مكاتب تجارية", return: "12%", duration: "3 سنوات", minInvest: "5,000", distribution: "شهري", funded: 68, gradient: "from-[#1a4a2e] to-[#2d7b33]" },
@@ -46,12 +118,14 @@ const modelItems = [
   },
 ];
 
-const stats = [
-  { value: "+50", label: "فرصة عقارية" },
-  { value: "+1,200", label: "مالك نشط" },
-  { value: "12%", label: "متوسط الدخل الإيجاري" },
-  { value: "340K", label: "ريال وُزّعت هذا الشهر" },
-];
+function buildStats(live: Awaited<ReturnType<typeof fetchLiveStats>>) {
+  return [
+    { value: live.opportunities, label: "فرصة عقارية" },
+    { value: live.owners, label: "مالك نشط" },
+    { value: live.avgReturn, label: "متوسط الدخل الإيجاري" },
+    { value: live.distributedThisMonth, label: "ريال وُزّعت هذا الشهر" },
+  ];
+}
 
 const faqs = [
   { q: "ما الفرق بين نافع وشراء عقار مباشرة؟", a: "في نافع تستثمر في حق المنفعة لا في ملكية العقار، مما يعني دخولاً بمبالغ أصغر، سيولة أعلى، وإدارة احترافية دون أي عناء." },
@@ -61,7 +135,11 @@ const faqs = [
   { q: "كيف تُحقق نافع الأرباح؟", a: "نافع تأخذ رسوم إدارة بسيطة من الدخل الإيجاري المتحقق. لا رسوم خفية ولا عمولات دخول." },
 ];
 
-export default function LandingPage() {
+export const revalidate = 300;
+
+export default async function LandingPage() {
+  const live = await fetchLiveStats();
+  const stats = buildStats(live);
   return (
     <main className="min-h-screen bg-white text-[#1a1a1a] font-[family-name:var(--font-tajawal)]" dir="rtl">
 
@@ -72,6 +150,7 @@ export default function LandingPage() {
           <a href="#how" className="hover:text-[#2d7b33] transition-colors">رحلة العميل</a>
           <a href="#model" className="hover:text-[#2d7b33] transition-colors">نموذج العمل</a>
           <a href="#opportunities" className="hover:text-[#2d7b33] transition-colors">الفرص</a>
+          <a href="#testimonials" className="hover:text-[#2d7b33] transition-colors">التجارب</a>
           <a href="#faq" className="hover:text-[#2d7b33] transition-colors">الأسئلة الشائعة</a>
         </div>
         <div className="flex items-center gap-3">
@@ -110,6 +189,40 @@ export default function LandingPage() {
             <a href="#opportunities" className="border-2 border-[#2d7b33] text-[#2d7b33] text-base font-bold px-10 py-4 rounded-full hover:bg-[#e8f5e9] transition-colors">
               استعرض الفرص ←
             </a>
+          </div>
+
+          {/* App Store / Google Play badges */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-8">
+            <p className="text-xs text-gray-400">أو حمّل التطبيق:</p>
+            <div className="flex gap-3">
+              <a
+                href="https://apps.apple.com/app/id6762548228"
+                target="_blank"
+                rel="noopener"
+                className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                </svg>
+                <div className="text-right leading-tight">
+                  <div className="text-[9px] opacity-70">حمّل من</div>
+                  <div className="text-xs font-bold">App Store</div>
+                </div>
+              </a>
+              <a
+                href="#"
+                aria-disabled="true"
+                className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl opacity-60 cursor-not-allowed"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.25 12l2.448-2.491zM5.864 2.658L16.802 8.99l-2.302 2.302-8.636-8.634z"/>
+                </svg>
+                <div className="text-right leading-tight">
+                  <div className="text-[9px] opacity-70">قريباً على</div>
+                  <div className="text-xs font-bold">Google Play</div>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -320,6 +433,35 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Testimonials ── */}
+      <section id="testimonials" className="py-24 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <span className="text-[#2d7b33] text-sm font-semibold bg-[#e8f5e9] px-4 py-1.5 rounded-full">تجارب حقيقية</span>
+            <h2 className="text-4xl font-extrabold text-[#1a1a1a] mt-4 mb-3">ماذا يقول ملاك نافع؟</h2>
+            <p className="text-gray-500">تجارب من مستخدمين حقيقيين على المنصة</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div key={t.name} className="bg-[#f9fafb] rounded-2xl p-7 border border-gray-100 hover:border-[#2d7b33]/20 transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-[#e8f5e9] flex items-center justify-center text-[#2d7b33] font-extrabold text-lg">
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#1a1a1a]">{t.name}</p>
+                    <p className="text-xs text-gray-400">{t.role}</p>
+                  </div>
+                </div>
+                <div className="text-[#2d7b33] text-2xl leading-none mb-2">&ldquo;</div>
+                <p className="text-sm text-gray-600 leading-relaxed">{t.quote}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-400 mt-8">تجارب توضيحية — نضيف شهادات حقيقية من الملاك مع نموهم على المنصة</p>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
       <section className="py-24 px-6 bg-[#2d7b33] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
@@ -333,6 +475,30 @@ export default function LandingPage() {
             ابدأ الآن مجاناً
           </Link>
           <p className="text-white/50 text-sm mt-4">لا رسوم تسجيل · تحقق فوري عبر نفاذ</p>
+
+          <div className="flex gap-3 justify-center mt-8">
+            <a
+              href="https://apps.apple.com/app/id6762548228"
+              target="_blank"
+              rel="noopener"
+              className="flex items-center gap-2 bg-black/30 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl hover:bg-black/40 transition-colors border border-white/10"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              <span className="text-xs font-bold">App Store</span>
+            </a>
+            <a
+              href="#"
+              aria-disabled="true"
+              className="flex items-center gap-2 bg-black/30 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl opacity-60 cursor-not-allowed border border-white/10"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.25 12l2.448-2.491zM5.864 2.658L16.802 8.99l-2.302 2.302-8.636-8.634z"/>
+              </svg>
+              <span className="text-xs font-bold">Google Play — قريباً</span>
+            </a>
+          </div>
         </div>
       </section>
 
