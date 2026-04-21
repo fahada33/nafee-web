@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 // ─── Types ───────────────────────────────────────────────────────
-type DocEntry = { name: string; file: string };
+type DocEntry = { name: string; file: string; blob?: File; uploaded?: string };
 type FaqEntry = { q: string; a: string };
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -119,6 +119,21 @@ export default function NewOpportunityPage() {
     }
     if (uploadedUrls.length > 0) imageUrl = uploadedUrls[0];
 
+    // Upload PDF documents
+    const uploadedDocs: { name: string; url: string }[] = [];
+    for (const doc of docs) {
+      if (!doc.blob || !doc.name.trim()) continue;
+      const path = `documents/${Date.now()}_${Math.random().toString(36).slice(2)}.pdf`;
+      const { error } = await supabase.storage.from("opportunities").upload(path, doc.blob, {
+        upsert: true,
+        contentType: "application/pdf",
+      });
+      if (!error) {
+        const { data: pub } = supabase.storage.from("opportunities").getPublicUrl(path);
+        uploadedDocs.push({ name: doc.name.trim(), url: pub.publicUrl });
+      }
+    }
+
     await supabase.from("opportunities").insert({
       title:          identity.title,
       location:       `${identity.city}، ${identity.district}`.trim().replace(/،\s*$/, ""),
@@ -135,6 +150,7 @@ export default function NewOpportunityPage() {
       investors_count: 0,
       featured:       false,
       image_url:      imageUrl,
+      documents:      uploadedDocs,
     });
     setSaving(false);
     router.push("/dashboard/opportunities");
@@ -441,7 +457,11 @@ export default function NewOpportunityPage() {
                     <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
                   </svg>
                   رفع ملف
-                  <input type="file" accept=".pdf" className="hidden" onChange={(e) => editDoc(i, "file", e.target.files?.[0]?.name ?? "")} />
+                  <input type="file" accept=".pdf" className="hidden" onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    setDocs((d) => d.map((x, idx) => idx === i ? { ...x, file: f.name, blob: f } : x));
+                  }} />
                 </label>
                 {doc.file && <span className="text-xs text-gray-400 truncate max-w-[80px]">{doc.file}</span>}
                 {docs.length > 1 && (

@@ -50,6 +50,24 @@ const navItems = [
     ),
   },
   {
+    href: "/dashboard/payments",
+    label: "معاملات البطاقة",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/announcements",
+    label: "الإعلانات",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/>
+      </svg>
+    ),
+  },
+  {
     href: "/dashboard/analytics",
     label: "التقارير والتحليلات",
     icon: (
