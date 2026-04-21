@@ -329,7 +329,7 @@ export default function UsersPage() {
 
             {/* Investment Summary */}
             {statsLoading ? (
-              <div className="bg-gray-50 rounded-xl p-3 text-center text-xs text-gray-400">جاري تحميل الاستثمارات...</div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center text-xs text-gray-400">جاري تحميل العقود...</div>
             ) : userStats && (
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-[#e8f5e9] rounded-xl p-3 text-center">
@@ -338,7 +338,7 @@ export default function UsersPage() {
                 </div>
                 <div className="bg-[#e8f5e9] rounded-xl p-3 text-center">
                   <p className="text-lg font-extrabold text-[#2d7b33]">{fmtMoney(userStats.total_invested)}</p>
-                  <p className="text-xs text-[#2d7b33] mt-0.5">ريال مستثمر</p>
+                  <p className="text-xs text-[#2d7b33] mt-0.5">ريال تملُّك</p>
                 </div>
               </div>
             )}
@@ -368,7 +368,7 @@ export default function UsersPage() {
             <div className="bg-gray-50 rounded-xl p-3 flex flex-col gap-2">
               <p className="text-xs font-bold text-gray-400 mb-1">الامتثال</p>
               <Row label="ملف المخاطر" value={riskMap[selectedUser.risk_profile ?? "moderate"]} />
-              <Row label="مستثمر معتمد" value={selectedUser.accredited_investor ? "نعم" : "لا"} />
+              <Row label="مالك معتمد" value={selectedUser.accredited_investor ? "نعم" : "لا"} />
               <Row label="PEP" value={selectedUser.pep_status ? "نعم ⚠️" : "لا"} />
               {selectedUser.kyc_reviewed_by && <Row label="راجع KYC" value={selectedUser.kyc_reviewed_by} />}
               {selectedUser.kyc_reviewed_at && <Row label="تاريخ المراجعة" value={formatDateShort(selectedUser.kyc_reviewed_at)} />}
@@ -377,7 +377,7 @@ export default function UsersPage() {
             {/* Investments list */}
             {userStats && userStats.investments.length > 0 && (
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-bold text-gray-400">الاستثمارات ({userStats.investments.length})</p>
+                <p className="text-xs font-bold text-gray-400">العقود ({userStats.investments.length})</p>
                 {userStats.investments.map((inv) => (
                   <div key={inv.id} className="bg-gray-50 rounded-xl p-3 flex flex-col gap-1">
                     <div className="flex items-center justify-between">

@@ -101,10 +101,10 @@ export default function AnalyticsPage() {
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "إجمالي الاستثمارات", value: `${fmtMoney(totalInvested)} ريال`, icon: "💰" },
-          { label: "إجمالي المستثمرين",  value: totalUsers.toLocaleString("ar-SA"), icon: "👥" },
+          { label: "إجمالي التملك",      value: `${fmtMoney(totalInvested)} ريال`, icon: "💰" },
+          { label: "إجمالي الملاك",       value: totalUsers.toLocaleString("ar-SA"), icon: "👥" },
           { label: "إجمالي التوزيعات",   value: `${fmtMoney(totalDist)} ريال`, icon: "📤" },
-          { label: "متوسط الاستثمار",    value: `${fmtMoney(avgInv)} ريال`, icon: "📊" },
+          { label: "متوسط التملك",       value: `${fmtMoney(avgInv)} ريال`, icon: "📊" },
         ].map((kpi) => (
           <div key={kpi.label} className="bg-white rounded-2xl p-5 shadow-sm">
             <div className="mb-3 text-2xl">{kpi.icon}</div>
@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
         {/* Top Opportunities */}
         <div className="col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-50">
-            <h3 className="font-bold text-[#1a1a1a]">أداء الفرص الاستثمارية</h3>
+            <h3 className="font-bold text-[#1a1a1a]">أداء الفرص العقارية</h3>
           </div>
           {oppStats.length === 0 ? (
             <div className="text-center py-12 text-gray-400 text-sm">لا توجد بيانات</div>
@@ -128,9 +128,9 @@ export default function AnalyticsPage() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="text-right text-xs text-gray-400 font-semibold px-6 py-3">الفرصة</th>
-                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الاستثمارات</th>
-                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">المستثمرون</th>
-                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">العائد</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">مبلغ التملك</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الملاك</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الدخل الإيجاري</th>
                   <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الحصة</th>
                 </tr>
               </thead>
@@ -182,7 +182,7 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="pt-4 border-t border-gray-50">
-            <h4 className="text-sm font-bold text-[#1a1a1a] mb-3">توزيع حجم الاستثمار</h4>
+            <h4 className="text-sm font-bold text-[#1a1a1a] mb-3">توزيع حجم التملك</h4>
             {[
               { label: "أقل من 10K",     count: invBuckets.lt10 },
               { label: "10K – 50K",       count: invBuckets.lt50 },

@@ -152,13 +152,13 @@ function EditForm() {
 
         <SectionCard title="المؤشرات المالية">
           <div className="grid grid-cols-2 gap-4">
-            <Field label="العائد السنوي (%)"><input type="number" value={form.return_percent} onChange={(e) => set("return_percent", e.target.value)} className={inputCls} /></Field>
-            <Field label="مدة الاستثمار (سنوات)"><input type="number" value={form.duration_years} onChange={(e) => set("duration_years", e.target.value)} className={inputCls} /></Field>
+            <Field label="الدخل الإيجاري السنوي (%)"><input type="number" value={form.return_percent} onChange={(e) => set("return_percent", e.target.value)} className={inputCls} /></Field>
+            <Field label="مدة العقد (سنوات)"><input type="number" value={form.duration_years} onChange={(e) => set("duration_years", e.target.value)} className={inputCls} /></Field>
             <Field label="حجم الصفقة (ريال)"><input type="number" value={form.total_value} onChange={(e) => set("total_value", e.target.value)} className={inputCls} /></Field>
             <Field label="الدخل الشهري (ريال)"><input type="number" value={form.monthly_income} onChange={(e) => set("monthly_income", e.target.value)} className={inputCls} /></Field>
             <Field label="قيمة الحصة (ريال)"><input type="number" value={form.share_amount} onChange={(e) => set("share_amount", e.target.value)} className={inputCls} /></Field>
             <Field label="نسبة التمويل (%)"><input type="number" value={form.funded_percent} onChange={(e) => set("funded_percent", e.target.value)} className={inputCls} /></Field>
-            <Field label="عدد المستثمرين"><input type="number" value={form.investors_count} onChange={(e) => set("investors_count", e.target.value)} className={inputCls} /></Field>
+            <Field label="عدد الملاك"><input type="number" value={form.investors_count} onChange={(e) => set("investors_count", e.target.value)} className={inputCls} /></Field>
           </div>
         </SectionCard>
 

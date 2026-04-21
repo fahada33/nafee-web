@@ -114,7 +114,7 @@ export default function OpportunitiesPage() {
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">النوع</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">الحالة</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">التمويل</th>
-                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">العائد</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">الدخل الإيجاري</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">الملاك</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-4">الإجراءات</th>
               </tr>

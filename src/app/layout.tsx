@@ -9,8 +9,8 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "نافع | استثمر في حقوق المنفعة العقارية",
-  description: "منصة نافع للاستثمار في حقوق المنفعة العقارية - استثمر بذكاء واكسب عوائد منتظمة",
+  title: "نافع | تملّك حقوق المنفعة العقارية",
+  description: "منصة نافع لتملك حقوق المنفعة العقارية - تملّك بذكاء واكسب دخلاً إيجارياً منتظماً",
 };
 
 export default function RootLayout({

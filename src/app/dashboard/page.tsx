@@ -106,7 +106,7 @@ export default function DashboardPage() {
         {[
           { label: "إجمالي الملاك",          value: usersCount.toLocaleString("ar-SA"), icon: "👥",  color: "text-[#1a1a1a]" },
           { label: "الفرص النشطة",            value: String(activeOpps),                 icon: "🏢",  color: "text-[#1a1a1a]" },
-          { label: "إجمالي الاستثمارات",      value: fmtMoney(totalInvested),            icon: "💰",  color: "text-[#2d7b33]", unit: "ريال" },
+          { label: "إجمالي التملك",          value: fmtMoney(totalInvested),            icon: "💰",  color: "text-[#2d7b33]", unit: "ريال" },
           { label: "طلبات شحن معلقة",         value: String(pendingDeposits),            icon: "📥",  color: "text-orange-500" },
         ].map((stat) => (
           <div key={stat.label} className="bg-white rounded-2xl p-5 shadow-sm">
@@ -122,7 +122,7 @@ export default function DashboardPage() {
       {/* Opportunities Table */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
-          <h3 className="font-bold text-[#1a1a1a]">الفرص الاستثمارية</h3>
+          <h3 className="font-bold text-[#1a1a1a]">الفرص العقارية</h3>
           <Link href="/dashboard/opportunities" className="text-[#2d7b33] text-sm font-medium hover:underline">عرض الكل</Link>
         </div>
         {opportunities.length === 0 ? (

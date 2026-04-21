@@ -74,14 +74,14 @@ export default function NewOpportunityPage() {
   });
 
   // § 7 — Risks (dynamic list)
-  const [risks, setRisks] = useState<string[]>(["العائد المعروض مستهدف وليس مضموناً قانونياً"]);
+  const [risks, setRisks] = useState<string[]>(["الدخل الإيجاري المعروض مستهدف وليس مضموناً قانونياً"]);
   const addRisk    = () => setRisks((r) => [...r, ""]);
   const removeRisk = (i: number) => setRisks((r) => r.filter((_, idx) => idx !== i));
   const editRisk   = (i: number, v: string) => setRisks((r) => r.map((x, idx) => idx === i ? v : x));
 
   // § 8 — Documents (dynamic list)
   const [docs, setDocs] = useState<DocEntry[]>([
-    { name: "ملخص الفرصة الاستثمارية", file: "" },
+    { name: "ملخص الفرصة العقارية", file: "" },
     { name: "نشرة الإصدار الكاملة", file: "" },
   ]);
   const addDoc    = () => setDocs((d) => [...d, { name: "", file: "" }]);
@@ -91,8 +91,8 @@ export default function NewOpportunityPage() {
 
   // § 9 — FAQ (dynamic list)
   const [faqs, setFaqs] = useState<FaqEntry[]>([
-    { q: "متى أستلم العوائد؟", a: "" },
-    { q: "هل أستطيع الخروج مبكراً؟", a: "" },
+    { q: "متى أستلم الدخل الإيجاري؟", a: "" },
+    { q: "هل أستطيع التنازل عن وحدة منفعتي مبكراً؟", a: "" },
   ]);
   const addFaq    = () => setFaqs((f) => [...f, { q: "", a: "" }]);
   const removeFaq = (i: number) => setFaqs((f) => f.filter((_, idx) => idx !== i));
@@ -162,7 +162,7 @@ export default function NewOpportunityPage() {
         {/* ══════════════════════════════════════════════════════
             § 1 — الهوية
         ══════════════════════════════════════════════════════ */}
-        <SectionCard title="هوية الفرصة" subtitle="الاسم والموقع والوصف المختصر الذي يظهر للمستثمر أولاً">
+        <SectionCard title="هوية الفرصة" subtitle="الاسم والموقع والوصف المختصر الذي يظهر للمالك أولاً">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Field label="اسم الفرصة / العقار" required>
@@ -203,7 +203,7 @@ export default function NewOpportunityPage() {
         ══════════════════════════════════════════════════════ */}
         <SectionCard title="المؤشرات الرئيسية" subtitle="تُعرض في الشريط المختصر أعلى صفحة الفرصة">
           <div className="grid grid-cols-3 gap-4">
-            <Field label="العائد السنوي (%)" required>
+            <Field label="الدخل الإيجاري السنوي (%)" required>
               <div className="relative">
                 <input type="number" value={indicators.annualReturn}
                   onChange={(e) => setIndicators({ ...indicators, annualReturn: e.target.value })}
@@ -211,7 +211,7 @@ export default function NewOpportunityPage() {
                 <span className="absolute left-3 top-3 text-gray-400 text-sm">%</span>
               </div>
             </Field>
-            <Field label="مدة الاستثمار" required>
+            <Field label="مدة العقد" required>
               <input value={indicators.duration} onChange={(e) => setIndicators({ ...indicators, duration: e.target.value })}
                 placeholder="10 سنوات" className={inputCls} />
             </Field>
@@ -224,9 +224,9 @@ export default function NewOpportunityPage() {
         </SectionCard>
 
         {/* ══════════════════════════════════════════════════════
-            § 3 — ملخص الاستثمار
+            § 3 — ملخص التملك
         ══════════════════════════════════════════════════════ */}
-        <SectionCard title="ملخص الاستثمار" subtitle="الأرقام التي يراها المستثمر في بطاقة ملخص الاستثمار">
+        <SectionCard title="ملخص التملك" subtitle="الأرقام التي يراها المالك في بطاقة ملخص التملك">
           <div className="grid grid-cols-2 gap-4">
             <Field label="متوسط الدخل الشهري (ريال)" required>
               <div className="relative">
@@ -249,7 +249,7 @@ export default function NewOpportunityPage() {
                 onChange={(e) => setInvest({ ...invest, minShares: e.target.value })}
                 placeholder="1" className={inputCls} />
             </Field>
-            <Field label="الحد الأدنى للاستثمار (ريال)" required>
+            <Field label="الحد الأدنى للتملك (ريال)" required>
               <div className="relative">
                 <input type="number" value={invest.minInvestment}
                   onChange={(e) => setInvest({ ...invest, minInvestment: e.target.value })}
@@ -333,11 +333,11 @@ export default function NewOpportunityPage() {
         </SectionCard>
 
         {/* ══════════════════════════════════════════════════════
-            § 6 — آلية العوائد
+            § 6 — آلية الدخل الإيجاري
         ══════════════════════════════════════════════════════ */}
-        <SectionCard title="آلية العوائد" subtitle="تُعرض في قسم 'آلية العوائد' بصفحة الفرصة">
+        <SectionCard title="آلية الدخل الإيجاري" subtitle="تُعرض في قسم 'آلية الدخل الإيجاري' بصفحة الفرصة">
           <div className="flex flex-col gap-4">
-            <Field label="كيف يتحقق العائد؟" required>
+            <Field label="كيف يتحقق الدخل الإيجاري؟" required>
               <textarea value={returns.how} onChange={(e) => setReturns({ ...returns, how: e.target.value })}
                 placeholder="اشرح مصدر الإيراد، مثلاً: إيرادات الإيجار الشهري المحصّلة من المستأجرين…"
                 rows={3} className={textareaCls} />
@@ -348,7 +348,7 @@ export default function NewOpportunityPage() {
                   {schedules.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </Field>
-              <Field label="نوع العائد" required>
+              <Field label="نوع الدخل" required>
                 <select value={returns.returnType} onChange={(e) => setReturns({ ...returns, returnType: e.target.value })} className={selectCls}>
                   {returnTypes.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -358,9 +358,9 @@ export default function NewOpportunityPage() {
               <input value={returns.firstPayout} onChange={(e) => setReturns({ ...returns, firstPayout: e.target.value })}
                 placeholder="مثال: بعد 30 يوماً من اكتمال التمويل" className={inputCls} />
             </Field>
-            <Field label="ملاحظة على العوائد">
+            <Field label="ملاحظة على الدخل">
               <textarea value={returns.note} onChange={(e) => setReturns({ ...returns, note: e.target.value })}
-                placeholder="أي توضيح إضافي للمستثمر…" rows={2} className={textareaCls} />
+                placeholder="أي توضيح إضافي للمالك…" rows={2} className={textareaCls} />
             </Field>
           </div>
         </SectionCard>
@@ -423,7 +423,7 @@ export default function NewOpportunityPage() {
         {/* ══════════════════════════════════════════════════════
             § 8 — المستندات
         ══════════════════════════════════════════════════════ */}
-        <SectionCard title="المستندات" subtitle="ملفات PDF تظهر في قسم المستندات للمستثمر">
+        <SectionCard title="المستندات" subtitle="ملفات PDF تظهر في قسم المستندات للمالك">
           <div className="flex flex-col gap-3">
             {docs.map((doc, i) => (
               <div key={i} className="flex gap-3 items-center p-3 border border-gray-100 rounded-xl">
@@ -465,7 +465,7 @@ export default function NewOpportunityPage() {
         {/* ══════════════════════════════════════════════════════
             § 9 — الأسئلة الشائعة
         ══════════════════════════════════════════════════════ */}
-        <SectionCard title="الأسئلة الشائعة" subtitle="تُعرض للمستثمر في نهاية صفحة الفرصة">
+        <SectionCard title="الأسئلة الشائعة" subtitle="تُعرض للمالك في نهاية صفحة الفرصة">
           <div className="flex flex-col gap-3">
             {faqs.map((faq, i) => (
               <div key={i} className="border border-gray-100 rounded-2xl p-4 flex flex-col gap-2.5">

@@ -74,7 +74,7 @@ export default function DistributionsPage() {
         .eq("status", "active");
 
       if (!investments || investments.length === 0) {
-        alert("لا يوجد مستثمرون في هذه الفرصة");
+        alert("لا يوجد ملاك في هذه الفرصة");
         setSubmitting(false);
         return;
       }
@@ -152,7 +152,7 @@ export default function DistributionsPage() {
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-50">
           <h3 className="font-bold text-[#1a1a1a]">الفرص النشطة</h3>
-          <p className="text-xs text-gray-400 mt-0.5">اختر فرصة لصرف التوزيعات على مستثمريها</p>
+          <p className="text-xs text-gray-400 mt-0.5">اختر فرصة لصرف التوزيعات على ملاكها</p>
         </div>
         {opps.length === 0 ? (
           <div className="text-center py-12 text-gray-400 text-sm">لا توجد فرص نشطة</div>
@@ -161,9 +161,9 @@ export default function DistributionsPage() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-right text-xs text-gray-400 font-semibold px-6 py-3">الفرصة</th>
-                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">المبلغ المستثمر</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">مبلغ التملك</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الملاك</th>
-                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">العائد المتوقع</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الدخل الإيجاري المتوقع</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -207,7 +207,7 @@ export default function DistributionsPage() {
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">تاريخ التوزيع</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">إجمالي المبلغ</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الملاك</th>
-                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">العائد الفعلي</th>
+                <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الدخل الفعلي</th>
                 <th className="text-right text-xs text-gray-400 font-semibold px-4 py-3">الحالة</th>
               </tr>
             </thead>
@@ -242,16 +242,16 @@ export default function DistributionsPage() {
 
             <div className="bg-[#e8f5e9] rounded-2xl p-4 mb-5">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-gray-500">المبلغ المستثمر: </span><span className="font-bold">{fmtMoney(investedAmount)} ريال</span></div>
+                <div><span className="text-gray-500">مبلغ التملك: </span><span className="font-bold">{fmtMoney(investedAmount)} ريال</span></div>
                 <div><span className="text-gray-500">الملاك: </span><span className="font-bold">{selected.investors_count}</span></div>
-                <div><span className="text-gray-500">العائد الافتراضي: </span><span className="font-bold text-[#2d7b33]">{selected.return_percent}%</span></div>
+                <div><span className="text-gray-500">الدخل الافتراضي: </span><span className="font-bold text-[#2d7b33]">{selected.return_percent}%</span></div>
               </div>
             </div>
 
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium text-[#1a1a1a] mb-1.5 block">العائد الفعلي (%) *</label>
+                  <label className="text-sm font-medium text-[#1a1a1a] mb-1.5 block">الدخل الفعلي (%) *</label>
                   <div className="relative">
                     <input type="number" value={actualReturn} onChange={(e) => setActualReturn(e.target.value)}
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 pl-8 text-lg font-bold focus:outline-none focus:border-[#2d7b33]"
@@ -272,14 +272,14 @@ export default function DistributionsPage() {
                 <div className="bg-[#e8f5e9] rounded-xl p-4 text-center">
                   <p className="text-xs text-gray-500 mb-1">إجمالي التوزيع الذي سيُصرف</p>
                   <p className="text-2xl font-extrabold text-[#2d7b33]">{fmtMoney(estimatedTotal)} ريال</p>
-                  <p className="text-xs text-gray-400 mt-1">يوزع على {selected.investors_count} مستثمر</p>
+                  <p className="text-xs text-gray-400 mt-1">يوزع على {selected.investors_count} مالك</p>
                 </div>
               )}
 
               <div>
                 <label className="text-sm font-medium text-[#1a1a1a] mb-1.5 block">ملاحظات (اختياري)</label>
                 <textarea value={note} onChange={(e) => setNote(e.target.value)}
-                  placeholder="أي ملاحظات للمستثمرين..."
+                  placeholder="أي ملاحظات للملاك..."
                   rows={3} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2d7b33] resize-none" />
               </div>
 
