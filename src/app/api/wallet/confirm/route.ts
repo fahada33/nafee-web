@@ -26,12 +26,20 @@ export async function POST(req: Request) {
     }
 
     // Verify with Moyasar using HTTP Basic (secret_key:)
-    const auth = Buffer.from(`${secretKey}:`).toString('base64');
+    const auth = Buffer.from(`${secretKey.trim()}:`).toString('base64');
     const verifyRes = await fetch(`${MOYASAR_API}/${payment_id}`, {
       headers: { Authorization: `Basic ${auth}` },
     });
     if (!verifyRes.ok) {
-      return NextResponse.json({ error: 'payment_not_found' }, { status: 404 });
+      const body = await verifyRes.text();
+      return NextResponse.json(
+        {
+          error: 'moyasar_lookup_failed',
+          status: verifyRes.status,
+          detail: body.substring(0, 400),
+        },
+        { status: verifyRes.status === 401 ? 401 : 404 },
+      );
     }
     const payment = await verifyRes.json();
 
