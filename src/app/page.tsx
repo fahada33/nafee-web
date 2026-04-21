@@ -8,17 +8,17 @@ const opportunities = [
 
 const steps = [
   { num: "01", title: "إنشاء الحساب", desc: "سجّل عبر نفاذ في دقائق. هويتك الوطنية هي كل ما تحتاجه للبدء.", icon: "🪪" },
-  { num: "02", title: "استكمال KYC", desc: "أجب على بضعة أسئلة بسيطة لتحديد ملفك الاستثماري وفق متطلبات هيئة السوق المالية.", icon: "✅" },
+  { num: "02", title: "استكمال KYC", desc: "أجب على بضعة أسئلة بسيطة لتحديد ملفك وفق متطلبات هيئة العقار.", icon: "✅" },
   { num: "03", title: "شحن المحفظة", desc: "أضف رصيداً عبر مدى أو فيزا أو تحويل بنكي. آمن ومشفّر.", icon: "💳" },
-  { num: "04", title: "اختر فرصتك", desc: "تصفّح الفرص المتاحة، ادرس التفاصيل والمستندات، واستثمر بنقرة واحدة.", icon: "🏢" },
-  { num: "05", title: "وقّع العقد", desc: "وقّع عقد حق المنفعة إلكترونياً وأكّد استثمارك بشكل آمن وقانوني.", icon: "📝" },
-  { num: "06", title: "استلم عوائدك", desc: "تصل التوزيعات مباشرة لمحفظتك في المنصة وفق الجدول المحدد لكل فرصة.", icon: "💰" },
+  { num: "04", title: "اختر فرصتك", desc: "تصفّح الفرص المتاحة، ادرس التفاصيل والمستندات، وتملّك بنقرة واحدة.", icon: "🏢" },
+  { num: "05", title: "وقّع العقد", desc: "وقّع عقد حق المنفعة إلكترونياً وأكّد تملكك بشكل آمن وقانوني.", icon: "📝" },
+  { num: "06", title: "استلم دخلك الإيجاري", desc: "تصل التوزيعات مباشرة لمحفظتك في المنصة وفق الجدول المحدد لكل فرصة.", icon: "💰" },
 ];
 
 const modelItems = [
   {
     title: "حق المنفعة العقارية",
-    desc: "لا تمتلك العقار، بل تمتلك حق الانتفاع منه. هيكل شرعي ومرن يتيح لك الاستثمار بمبالغ صغيرة في عقارات كبيرة.",
+    desc: "لا تمتلك العقار، بل تمتلك حق الانتفاع منه. هيكل شرعي ومرن يتيح لك تملك وحدات منفعة في عقارات كبيرة بمبالغ صغيرة.",
     icon: "🏛️",
     color: "bg-[#e8f5e9]",
     textColor: "text-[#2d7b33]",
@@ -32,7 +32,7 @@ const modelItems = [
   },
   {
     title: "فريق نافع يُدير",
-    desc: "فريقنا المتخصص يختار العقارات ويُدير العمليات ويُدخل العوائد الفعلية. أنت تستثمر، نحن ندير.",
+    desc: "فريقنا المتخصص يختار العقارات ويُدير العمليات ويُدخل الدخل الإيجاري الفعلي. أنت تتملك، نحن ندير.",
     icon: "👷",
     color: "bg-orange-50",
     textColor: "text-orange-500",
@@ -47,18 +47,18 @@ const modelItems = [
 ];
 
 const stats = [
-  { value: "+50", label: "فرصة استثمارية" },
-  { value: "+1,200", label: "مستثمر نشط" },
-  { value: "12%", label: "متوسط العائد السنوي" },
+  { value: "+50", label: "فرصة عقارية" },
+  { value: "+1,200", label: "مالك نشط" },
+  { value: "12%", label: "متوسط الدخل الإيجاري" },
   { value: "340K", label: "ريال وُزّعت هذا الشهر" },
 ];
 
 const faqs = [
   { q: "ما الفرق بين نافع وشراء عقار مباشرة؟", a: "في نافع تستثمر في حق المنفعة لا في ملكية العقار، مما يعني دخولاً بمبالغ أصغر، سيولة أعلى، وإدارة احترافية دون أي عناء." },
-  { q: "ما الحد الأدنى للاستثمار؟", a: "يختلف حسب كل فرصة. بعض الفرص تبدأ من 3,000 ريال فقط. الحد الأدنى مذكور بوضوح في تفاصيل كل فرصة." },
-  { q: "متى أستلم عوائدي؟", a: "وفق جدول التوزيع المحدد لكل فرصة (شهري / ربع سنوي / نصف سنوي / سنوي). تُضاف العوائد مباشرة لمحفظتك داخل المنصة." },
-  { q: "هل يمكنني سحب أموالي في أي وقت؟", a: "رصيد محفظتك متاح للسحب في أي وقت. أما الاستثمارات فهي مرتبطة بمدة العقد المحددة لكل فرصة." },
-  { q: "كيف تُحقق نافع الأرباح؟", a: "نافع تأخذ رسوم إدارة بسيطة من العوائد المتحققة. لا رسوم خفية ولا عمولات دخول." },
+  { q: "ما الحد الأدنى للتملك؟", a: "يختلف حسب كل فرصة. بعض الفرص تبدأ من 3,000 ريال فقط. الحد الأدنى مذكور بوضوح في تفاصيل كل فرصة." },
+  { q: "متى أستلم دخلي الإيجاري؟", a: "وفق جدول التوزيع المحدد لكل فرصة (شهري / ربع سنوي / نصف سنوي / سنوي). يُضاف الدخل الإيجاري مباشرة لمحفظتك داخل المنصة." },
+  { q: "هل يمكنني سحب أموالي في أي وقت؟", a: "رصيد محفظتك متاح للسحب في أي وقت. أما وحدات المنفعة فهي مرتبطة بمدة العقد المحددة لكل فرصة." },
+  { q: "كيف تُحقق نافع الأرباح؟", a: "نافع تأخذ رسوم إدارة بسيطة من الدخل الإيجاري المتحقق. لا رسوم خفية ولا عمولات دخول." },
 ];
 
 export default function LandingPage() {
@@ -92,20 +92,20 @@ export default function LandingPage() {
 
         <div className="relative max-w-3xl mx-auto">
           <span className="inline-block bg-[#e8f5e9] text-[#2d7b33] text-sm font-semibold px-5 py-2 rounded-full mb-6 border border-[#2d7b33]/10">
-            🇸🇦 منصة الاستثمار العقاري السعودية الأولى
+            🇸🇦 منصة تملك حقوق المنفعة العقارية في السعودية
           </span>
           <h1 className="text-5xl md:text-6xl font-extrabold text-[#1a1a1a] leading-tight mb-6">
-            استثمر في حقوق
+            تملّك حقوق
             <br />
             <span className="text-[#2d7b33]">المنفعة العقارية</span>
           </h1>
           <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10 leading-relaxed">
-            حقّق عوائد منتظمة من الإيجارات دون أن تمتلك عقاراً.
+            حقّق دخلاً إيجارياً منتظماً دون أن تمتلك عقاراً.
             ابدأ بـ 3,000 ريال فقط، واستلم توزيعاتك شهرياً.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register" className="bg-[#2d7b33] text-white text-base font-bold px-10 py-4 rounded-full hover:bg-[#1f5a24] transition-colors shadow-xl shadow-[#2d7b33]/20">
-              ابدأ الاستثمار مجاناً
+              ابدأ التملك مجاناً
             </Link>
             <a href="#opportunities" className="border-2 border-[#2d7b33] text-[#2d7b33] text-base font-bold px-10 py-4 rounded-full hover:bg-[#e8f5e9] transition-colors">
               استعرض الفرص ←
@@ -131,8 +131,8 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <span className="text-[#2d7b33] text-sm font-semibold bg-[#e8f5e9] px-4 py-1.5 rounded-full">رحلة العميل</span>
-            <h2 className="text-4xl font-extrabold text-[#1a1a1a] mt-4 mb-3">كيف تستثمر في نافع؟</h2>
-            <p className="text-gray-400 max-w-md mx-auto">6 خطوات بسيطة تفصلك عن عوائدك الأولى</p>
+            <h2 className="text-4xl font-extrabold text-[#1a1a1a] mt-4 mb-3">كيف تتملك في نافع؟</h2>
+            <p className="text-gray-400 max-w-md mx-auto">6 خطوات بسيطة تفصلك عن دخلك الإيجاري الأول</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
@@ -167,7 +167,7 @@ export default function LandingPage() {
           <div className="text-center mb-14">
             <span className="text-[#2d7b33] text-sm font-semibold bg-[#e8f5e9] px-4 py-1.5 rounded-full">نموذج العمل</span>
             <h2 className="text-4xl font-extrabold text-[#1a1a1a] mt-4 mb-3">كيف تعمل نافع؟</h2>
-            <p className="text-gray-400 max-w-md mx-auto">نموذج استثماري شفاف قائم على حقوق المنفعة العقارية</p>
+            <p className="text-gray-400 max-w-md mx-auto">نموذج شفاف قائم على حقوق المنفعة العقارية</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5 mb-10">
@@ -189,13 +189,13 @@ export default function LandingPage() {
             <h3 className="font-extrabold text-[#1a1a1a] text-center mb-8">كيف تتدفق الأموال</h3>
             <div className="flex flex-col md:flex-row items-center justify-center gap-4">
               {[
-                { label: "المستثمر", sub: "يشحن محفظته", icon: "👤", color: "bg-[#e8f5e9] border-[#2d7b33]/20" },
+                { label: "المالك", sub: "يشحن محفظته", icon: "👤", color: "bg-[#e8f5e9] border-[#2d7b33]/20" },
                 { arrow: true },
                 { label: "نافع", sub: "تُدير العمليات", icon: "🏢", color: "bg-[#2d7b33] text-white" },
                 { arrow: true },
                 { label: "العقار", sub: "يُدرّ إيرادات", icon: "🏗️", color: "bg-orange-50 border-orange-200" },
                 { arrow: true },
-                { label: "المستثمر", sub: "يستلم عوائده", icon: "💸", color: "bg-[#e8f5e9] border-[#2d7b33]/20" },
+                { label: "المالك", sub: "يستلم دخله الإيجاري", icon: "💸", color: "bg-[#e8f5e9] border-[#2d7b33]/20" },
               ].map((item, i) =>
                 'arrow' in item ? (
                   <div key={i} className="text-[#2d7b33] text-2xl hidden md:block">←</div>
@@ -216,9 +216,9 @@ export default function LandingPage() {
       <section id="opportunities" className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <span className="text-[#2d7b33] text-sm font-semibold bg-[#e8f5e9] px-4 py-1.5 rounded-full">الفرص الاستثمارية</span>
+            <span className="text-[#2d7b33] text-sm font-semibold bg-[#e8f5e9] px-4 py-1.5 rounded-full">الفرص العقارية</span>
             <h2 className="text-4xl font-extrabold text-[#1a1a1a] mt-4 mb-3">فرص مختارة بعناية</h2>
-            <p className="text-gray-400 max-w-md mx-auto">كل فرصة تمر بتقييم دقيق من فريق نافع قبل طرحها للمستثمرين</p>
+            <p className="text-gray-400 max-w-md mx-auto">كل فرصة تمر بتقييم دقيق من فريق نافع قبل طرحها للملاك</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5 mb-8">
@@ -255,7 +255,7 @@ export default function LandingPage() {
                   <div className="grid grid-cols-3 gap-2 py-4 border-y border-gray-50 mb-4">
                     <div className="text-center">
                       <p className="text-[#2d7b33] font-extrabold text-lg">{opp.return}</p>
-                      <p className="text-xs text-gray-400">العائد</p>
+                      <p className="text-xs text-gray-400">الدخل الإيجاري</p>
                     </div>
                     <div className="text-center border-x border-gray-50">
                       <p className="font-bold text-[#1a1a1a] text-sm">{opp.duration}</p>
@@ -283,7 +283,7 @@ export default function LandingPage() {
                       <p className="font-extrabold text-[#1a1a1a]">{opp.minInvest} ريال</p>
                     </div>
                     <Link href="/register" className="bg-[#2d7b33] text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-[#1f5a24] transition-colors">
-                      استثمر الآن
+                      تملّك الآن
                     </Link>
                   </div>
                 </div>
@@ -304,7 +304,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-14">
             <span className="text-[#2d7b33] text-sm font-semibold bg-[#e8f5e9] px-4 py-1.5 rounded-full">الأسئلة الشائعة</span>
-            <h2 className="text-4xl font-extrabold text-[#1a1a1a] mt-4 mb-3">أسئلة يسألها المستثمرون</h2>
+            <h2 className="text-4xl font-extrabold text-[#1a1a1a] mt-4 mb-3">أسئلة يسألها الملاك</h2>
           </div>
           <div className="flex flex-col gap-3">
             {faqs.map((faq) => (
@@ -325,9 +325,9 @@ export default function LandingPage() {
         <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
         <div className="relative max-w-2xl mx-auto text-center text-white">
-          <h2 className="text-4xl font-extrabold mb-4">جاهز تبدأ استثمارك؟</h2>
+          <h2 className="text-4xl font-extrabold mb-4">جاهز تبدأ تملكك؟</h2>
           <p className="text-white/70 text-lg mb-8 max-w-md mx-auto">
-            انضم لأكثر من 1,200 مستثمر يحققون عوائد منتظمة عبر نافع
+            انضم لأكثر من 1,200 مالك يحققون دخلاً إيجارياً منتظماً عبر نافع
           </p>
           <Link href="/register" className="inline-block bg-white text-[#2d7b33] font-extrabold text-lg px-12 py-4 rounded-full hover:bg-[#e8f5e9] transition-colors shadow-xl">
             ابدأ الآن مجاناً
@@ -343,7 +343,7 @@ export default function LandingPage() {
             <div>
               <img src="/logo.svg" alt="نافع" className="h-10 w-auto brightness-0 invert mb-3" />
               <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-                منصة نافع للاستثمار في حقوق المنفعة العقارية. مرخصة ومنظمة وفق متطلبات هيئة السوق المالية السعودية.
+                منصة نافع لتملك حقوق المنفعة العقارية. مرخصة ومنظمة وفق متطلبات هيئة العقار السعودية.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-x-16 gap-y-3 text-sm text-gray-400">
@@ -359,7 +359,7 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-gray-500">
             <p>© 2025 نافع. جميع الحقوق محفوظة</p>
-            <p>الاستثمار في العقارات ينطوي على مخاطر. يُرجى قراءة نشرة المخاطر قبل الاستثمار.</p>
+            <p>تملك حقوق المنفعة العقارية ينطوي على مخاطر. يُرجى قراءة نشرة المخاطر قبل التملك.</p>
           </div>
         </div>
       </footer>
